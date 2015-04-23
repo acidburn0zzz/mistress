@@ -1,0 +1,12 @@
+Uhhhh I'll do this later
+
+But basically I tweet at it and it does stuff with other bots' api keys
+
+You need a config.json that's like
+{ key: "", secret: "", token: "", token_secret: "", mistress: x, self: y }
+the first four being strings, the bot's own credentials, and the last two being ids of the account that controls and the account that this is on. Other bots need a config.json like the same, sans the last two fields, and the mistress's directory needs to be in the same parent as the other bots' directories. Given this, the bot can build thralls.json itself via "enthrall" tweets.
+
+@botmistress enthrall @bot via `bot's directory name`
+@botmistress make @bot follow/unfollow @bot2
+@botmistress make @bot fav/unfav tweet_id
+@botmistress rest/wake
