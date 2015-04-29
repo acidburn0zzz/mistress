@@ -1,4 +1,7 @@
 var fs = require("fs");
+var twit = require("twit");
+var lzw = require("node-lzw");
+
 var api = JSON.parse(fs.readFileSync(__dirname + "/config.json", "utf8"));
 
 var thralls = {};
@@ -12,7 +15,6 @@ try {
 	} else throw e;
 }
 
-var twit = require("twit");
 var t = new twit({
 	consumer_key: api.key,
 	consumer_secret: api.secret,
@@ -68,6 +70,8 @@ stream.on("tweet", function(tweet) {
 		targets: [words[2],words[4]]
 	};
 
+	if(cmd.chain == "post" || cmd.chain == "tweet") cmd.targets[1] = words.slice(4).join(" ");
+
 	cmd.targets.forEach(function(element, index) {
 		if(element) {
 		       if(element.charAt(0) == "@") cmd.targets[index] = element.substr(1);
@@ -79,7 +83,7 @@ stream.on("tweet", function(tweet) {
 	console.log("cmd before switch: " + cmd);
 	switch(cmd.word) {
 		case "status":
-			reply("@" + mistress.screen_name + " Hello, " + mistress.first_name + ". I'm presently " + (self.awake ? "awake" : "resting") + ". I have " + Object.keys(thralls).length/2 + " bots under my control.", tweet.id_str);
+			reply("@" + mistress.screen_name + " Hello, " + mistress.first_name + ". I'm presently " + (self.awake ? "awake" : "resting") + ". I have " + Object.keys(thralls).length/2-1 + " bots under my control.", tweet.id_str);
 			break;
 		case "rest":
 			if(!self.awake) return;
@@ -197,8 +201,22 @@ stream.on("tweet", function(tweet) {
 							});
 					});
 					break;
+				case "post":
 				case "tweet":
+					var status = lzw.decode(cmd.targets[1]);
+					tt.post("statuses/update", { status: status },
+						function(err, data, response) {
+							if(err) throw err;
+							//reply here
+					});
+					break;
 				case "delete":
+					tt.post("statuses/destroy/:id", { id: cmd.targets[1] },
+						function(err, data, response) {
+							if(err) throw err;
+							//reply here
+					});
+					break;
 		}
 			//stuff here
 			break;
