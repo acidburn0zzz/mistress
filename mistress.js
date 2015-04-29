@@ -31,20 +31,33 @@ t.get("users/show", { id: api.self }, function(err, data, response) {
 	console.log("name: " + self.name + "\nAwake: " + self.awake);
 });
 
+var mistress = {};
+
+t.get("users/show", { id: api.mistress }, function(err, data, response) {
+	if(err) throw err;
+	mistress.id = data.id;
+	mistress.screen_name = data.screen_name;
+	mistress.name = data.name;
+	mistress.first_name = (data.name).split(" ")[0];
+	console.log("mistress: " + mistress);
+});
+
 var stream = t.stream("user");
 
 //incoming tweets are of the form "@botmistress make [id1] follow [id2]" "@botmistress enthrall [id] via [path]"
 //assume well-formed input, it doesn't even look at the thing unless it's from the mistress
 stream.on("tweet", function(tweet) {
+
+	console.log("TWEET START\n" + JSON.stringify(tweet) + "\nTWEET END");
 	//if it's not from me, exit immediately. perhaps do other things in the future
-	if(tweet.user.id !== api.mistress) return;
+	if(tweet.user.id !== mistress.id) return;
 	
 	//make an array of each individual word
 	var words = (tweet.text).trim().split(" ");
 	//exit if not an @reply or a dot-reply
 	if(words[0] != "@" + self.screen_name && words[0] != ".@" + self.screen_name) return;
-	//exit if asleep and command is not "wake"
-	if(!self.awake && words[1] != "wake") return;
+	//exit if asleep and command is not "wake" or "status"
+	if(!self.awake && !(words[1] == "wake" || words[1] == "status")) return;
 
 	//so now it's definitely from me and directed at her, we can switch on command words
 	//but again, in the future I can do fun things
@@ -65,6 +78,9 @@ stream.on("tweet", function(tweet) {
 
 	console.log("cmd before switch: " + cmd);
 	switch(cmd.word) {
+		case "status":
+			reply("@" + mistress.screen_name + " Hello, " + mistress.first_name + ". I'm presently " + (self.awake ? "awake" : "resting") + ". I have " + Object.keys(thralls).length/2 + " bots under my control.", tweet.id_str);
+			break;
 		case "rest":
 			if(!self.awake) return;
 			t.post("account/update_profile", { name: self.name + "$" }, function(err, data, response) {
@@ -86,7 +102,7 @@ stream.on("tweet", function(tweet) {
 			t.get("users/show", pop_user(cmd.targets[0]),
 			      function(err, data, response) {
 				      if(err) {
-					      reply("@" + tweet.user.screen_name + " I'm sorry, I couldn't find " + cmd.targets[0] + " on Twitter", tweet.id);
+					      reply("@" + mistress.screen_name + " I'm sorry, I couldn't find " + cmd.targets[0] + " on Twitter", tweet.id_str);
 					      return;
 				      }
 
@@ -113,7 +129,7 @@ stream.on("tweet", function(tweet) {
 				      //now write to file, async so our "all good" only sends on success
 				      fs.writeFile(__dirname + "/thralls.json", JSON.stringify(thralls), "utf8", 600, function(err) {
 					      if(err) throw err;
-					      reply("@" + tweet.user.screen_name + " " + data.name + " is now in my clutches", tweet.id);
+					      reply("@" + mistress.screen_name + " " + data.name + " is now in my clutches", tweet.id_str);
 				      });
 			      });
 			break;
@@ -134,14 +150,14 @@ stream.on("tweet", function(tweet) {
 					tt.post("friendships/create", pop_user(cmd.targets[1]),
 						function(err, data, response) {
 							if(err) throw err;
-//							reply("@" + tweet.user.screen_name + " I have forged a bond",tweet.id);
+//							reply("@" + mistress.screen_name + " I have forged a bond",tweet.id_str);
 					});
 					break;
 				case "unfollow":
 					tt.post("friendships/destroy", pop_user(cmd.targets[1]),
 						function(err, data, response) {
 							if(err) throw err;
-//							reply("@" + tweet.user.screen_name + " The bond is broken",tweet.id);
+//							reply("@" + mistress.screen_name + " The bond is broken",tweet.id_str);
 					});
 					break;
 				case "fav":
@@ -159,6 +175,28 @@ stream.on("tweet", function(tweet) {
 					});
 					break;
 				case "rt":
+				case "retweet":
+					tt.post("statuses/retweet/:id", { id: cmd.targets[1] },
+						function(err, data, response) {
+							if(err) throw err;
+							//reply here
+					});
+					break;
+				//these are a lil weirder-looking bc of Twitter api weirdness
+				//rts themselves have a unique id, this looks that id up given the original tweet's id
+				case "unrt":
+				case "unretweet":
+					tt.get("statuses/show/:id", { id: cmd.targets[1], include_my_retweet: true },
+					       function(err, data, response) {
+						       if(err) throw err;
+	console.log("RT DATA START\n" + JSON.stringify(data) + "\nEND");
+						       tt.post("statuses/destroy/:id", { id: data.current_user_retweet.id_str },
+							       function(err, data, response) {
+							       if(err) throw err;
+							       //reply here
+							});
+					});
+					break;
 				case "tweet":
 				case "delete":
 		}
@@ -169,7 +207,9 @@ stream.on("tweet", function(tweet) {
 
 //maybe let this take a real callback later, for now it's just tweeting the status of an op after we're finished
 function reply(status, origin_id) {
-	t.post("statuses/update", { status: status, in_reply_to_status_id: origin_id }, function(err, data, response) { });
+	t.post("statuses/update", { status: status, in_reply_to_status_id: origin_id }, function(err, data, response) {
+		console.log("reply to tweet: " + origin_id);
+	});
 }
 
 //fills a user obj for stuff like users/show, friendships/create, etc
