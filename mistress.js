@@ -41,7 +41,7 @@ t.get("users/show", { id: api.mistress }, function(err, data, response) {
 	mistress.screen_name = data.screen_name;
 	mistress.name = data.name;
 	mistress.first_name = (data.name).split(" ")[0];
-	console.log("mistress: " + mistress);
+	console.log("mistress: " + JSON.stringify(mistress));
 });
 
 var stream = t.stream("user");
@@ -203,7 +203,8 @@ stream.on("tweet", function(tweet) {
 					break;
 				case "post":
 				case "tweet":
-					var status = lzw.decode(cmd.targets[1]);
+					var status = lzw.decode(cmd.targets[1].split("").map(function(it){return String.fromCharCode(it.charCodeAt()-1)}).join(""));
+				console.log("status test: " + status + "\nlen: " + status.length);
 					tt.post("statuses/update", { status: status },
 						function(err, data, response) {
 							if(err) throw err;
