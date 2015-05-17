@@ -1,0 +1,24 @@
+{
+  "name": "botmistress",
+  "version": "0.1.0",
+  "description": "machine bff soon to be self-aware",
+  "main": "mistress.js",
+  "dependencies": {
+    "twit": "^1.1.20",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alicemaz/mistress.git"
+  },
+  "author": "Alice Maz",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alicemaz/mistress/issues"
+  },
+  "homepage": "https://github.com/alicemaz/mistress#readme"
+}
