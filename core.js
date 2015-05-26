@@ -39,6 +39,8 @@ stream.on("tweet", tweet => console.log("TWEET START\n" + JSON.stringify(tweet) 
 
 
 /*
+ * THIS IS ALL GARBAGE JUST FOR REFERENCE zzzz
+ *
 	//twit objects for all accounts
 	this.twitters = _.mapObject(accounts, val => new twit(val.credentials));
 	//lookup table of k:v ==  id:screen_name
