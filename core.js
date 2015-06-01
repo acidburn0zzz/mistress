@@ -35,7 +35,16 @@ const stream = twee.stream(mistress);
 //...and handle input
 stream.on("tweet", tweet => console.log("TWEET START\n" + JSON.stringify(tweet) + "\nTWEET END"));
 
-//mistress.tweet({status: "stream test 2 start"},err => {if(err) throw err;});
+
+/*
+mistress.tweet({status: "test initial 17"},(err,data) => {
+	if(err) throw err;
+	console.log("test1");
+	mistress.reply({status: "test reply 17", reply_id: data.id_str, omit_handle: true},err => {
+		console.log("test2");
+		if(err) throw err;
+	});
+});
 
 
 /*
