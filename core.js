@@ -30,10 +30,19 @@ const thralls = _.chain(accounts)
 	.value();
 
 //open a stream...
-const stream = twee.stream(mistress);
+//const stream = twee.stream(mistress);
 
 //...and handle input
-stream.on("tweet", tweet => console.log("TWEET START\n" + JSON.stringify(tweet) + "\nTWEET END"));
+//stream.on("tweet", tweet => console.log("TWEET START\n" + JSON.stringify(tweet) + "\nTWEET END"));
+	
+//mistress.pulldown({screen_name: "alicemazzy"}).then(data => fs.writeFile("alicet.json",JSON.stringify(data,null,"\t"),"utf8", err=>{}));
+
+
+/*
+const ptest = mistress._limit("statuses","/statuses/user_timeline",20);
+ptest.then(() => console.log("we happy")).catch(err => console.log("nope\n",err));
+const ptest2 = mistress._limit("statuses","/statuses/user_timeline",200);
+ptest2.then(() => console.log("we happy 2")).catch(err => console.log("nope\n",err));
 
 
 /*
