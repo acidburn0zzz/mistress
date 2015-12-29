@@ -6,7 +6,7 @@ const _ = require("underscore");
 const twee = require(path.join(__dirname,"lib","twitwrap.js"));
 
 //fancier logic goes here
-const executor = require(path.join(__dirname,"lib",process.argv[2] ? "cli.js" : "stream.js"))
+const executor = require(path.join(__dirname,"lib",/*process.argv[2] ? "cli.js" :*/ "stream.js"))
 
 const accounts = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "thralls.json"), "utf8"));
 
@@ -36,4 +36,3 @@ const thralls = _.chain(accounts)
 mistress.execute();
 
 
-//mistress.pulldown({screen_name: "swayandsea"}).then(data => fs.writeFile("ml/training/suit.json",JSON.stringify(data,null,"\t"),"utf8", err=>{}));
