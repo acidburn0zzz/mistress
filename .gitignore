@@ -1,7 +1,5 @@
 node_modules/
-training/
-config.json
-thralls.json
+accounts.json
 *~
 *.swp
 *.swo
