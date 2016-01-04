@@ -5,6 +5,7 @@
 const HUMAN = "63506279";
 const MISTRESS = "3168258306";
 
+const os = require("os");
 const _ = require("lodash");
 const Promise = require("bluebird");
 const Twit = require("twit");
@@ -21,8 +22,24 @@ const accounts = _(require("./data/accounts.json"))
     .object()
     .value();
 
-const human = accounts[HUMAN];
 const mistress = accounts[MISTRESS];
+mistress.name = (() => {
+    switch(os.platform()) {
+        case "linux":
+            return `mistress@${os.hostname()}:~$`;
+        case "freebsd":
+            return `mistress@${os.hostname()}:~ %`;
+        case "darwin":
+            return `${os.hostname()}:~ mistress$`;
+        default:
+            return "mistress>";
+    }
+})();
+if(mistress.name.length > 20)
+    mistress.name = "mistress>";
+//const
+
+const human = accounts[HUMAN];
 const thralls = _.omit(accounts, [HUMAN, MISTRESS]);
 
 const T = {
@@ -304,8 +321,44 @@ stream.on("tweet", tweet => {
     }
 });
 
+//startup pleasantries
 console.log(`botmistress v${require("./package.json").version}`);
 console.log(`${new Date().toISOString()}`);
-console.log(`dwelling on ${require("os").hostname()}`);
-console.log(`${_.keys(thralls).length} thralls in my clutches:`);
+console.log(`${os.type()} ${os.hostname()} ${os.release()} ${os.arch()}(${os.cpus().length}) ${os.platform()}`);
+console.log("mistress:");
+console.log(`  * @${mistress.screen_name} (${MISTRESS})`);
+console.log("human:");
+console.log(`  * @${human.screen_name} (${HUMAN})`);
+console.log(`thralls (${_.keys(thralls).length}):`);
 _.each(thralls, (thrall, id_str) => console.log(`  * @${thrall.screen_name} (${id_str})`));
+
+T.post(mistress.twitter, "account/update_profile", { name: mistress.name })
+    .then(() => console.log(`hello, ${human.alias[0]}`));
+
+//shutdown
+const shutdown = exitCode => {
+    T.post(mistress.twitter, "account/update_profile", { name: "mistress (offline)" })
+        .finally(() => {
+            console.log("goodbye");
+            process.exit(exitCode);
+        });
+};
+
+process.on("SIGINT", () => {
+    console.log("received SIGINT");
+
+    shutdown(2);
+});
+
+process.on("SIGTERM", () => {
+    console.log("received SIGTERM");
+
+    shutdown(15);
+});
+
+process.on("uncaughtException", e => {
+    console.log("uncaught exception:");
+    console.log(e.stack);
+
+    shutdown(99);
+});
